@@ -1,0 +1,47 @@
+# Python 缓存和编译文件
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 虚拟环境
+venv/
+env/
+.venv/
+ENV/
+
+# Jupyter Notebook 检查点
+.ipynb_checkpoints
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志和临时文件
+*.log
+*.tmp
+*.swp
+
+# 本地配置和密钥
+config.py
+config.json
+*.env
+.env.*
+
+# Elasticsearch 索引/缓存（如有）
+vector_store/
+workspace/
+.cache/
+output/
+data/processed/
+data/raw_reports/
+
+# 本地知识库文档（如有敏感/大文件可忽略）
+# docs/
+
+# 项目自动生成/临时文件
+*.bak
+*.old
+
+# 保留模板配置
+!config.py.template 

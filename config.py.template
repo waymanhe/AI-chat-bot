@@ -1,0 +1,23 @@
+# config.py.template
+# 用于存储项目中的敏感信息（API Key、账号、密码、服务地址等）
+# 请勿上传 config.py 到 Git 仓库！建议仅上传本模板文件。
+
+# ========== 大模型/Embedding服务密钥 ==========
+DASHSCOPE_API_KEY = ""  # 通义千问 DashScope API Key
+TAVILY_API_KEY = ""      # Tavily 网络搜索 API Key（如有）
+
+EMBEDDING_DIM = 1024
+EMBEDDING_MODEL = "text-embedding-v4"
+DASHSCOPE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"  # DashScope 兼容 API 地址
+ES_EMBEDDING_INDEX = "your_embedding_index_name"  # ES embedding 索引名
+
+# ========== 向量数据库/Elasticsearch 配置 ==========
+ES_HOST = "https://localhost"                 # Elasticsearch 服务地址
+ES_USERNAME = "elastic"                      # ES 账号
+ES_PASSWORD = ""                             # ES 密码
+ES_INDEX = "qwen_agent_rag_idx"              # 默认索引名
+
+# ========== 说明 ==========
+# 1. 请将 config.py.template 上传到仓库，config.py 本地保存。
+# 2. 仅在本地或安全环境下存放真实密钥，线上部署请用环境变量覆盖。
+# 3. 如需新增配置项，请同步维护本模板。 
