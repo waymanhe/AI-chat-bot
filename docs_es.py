@@ -7,7 +7,18 @@ import os
 from elasticsearch import Elasticsearch, helpers
 import fitz  # PyMuPDF
 from tqdm import tqdm
-from config import ES_HOST, ES_USERNAME, ES_PASSWORD, ES_INDEX, DOCS_FILES
+from config import ES_HOST, ES_USERNAME, ES_PASSWORD, ES_INDEX
+
+# ========== 自动获取 docs 目录下所有文件 ==========
+DOCS_DIR = './docs'
+DOCS_FILES = []
+if os.path.exists(DOCS_DIR):
+    for file in os.listdir(DOCS_DIR):
+        file_path = os.path.join(DOCS_DIR, file)
+        if os.path.isfile(file_path):
+            DOCS_FILES.append(file_path)
+
+print(f"找到 {len(DOCS_FILES)} 个文件: {DOCS_FILES}")
 
 # ========== 1. 连接到 Elasticsearch ==========
 # 自动拼接端口:9200（如未指定）
@@ -89,7 +100,7 @@ print("写入完成！")
 
 # ========== 5. 执行搜索 ========== 
 # 为了测试一下是否转换成功 size返回最接近的前三个
-search_query = "工伤保险和雇主险有什么区别？"
+search_query = "中石化研学活动守则有哪些？"
 rep_size = 3
 print(f"\n搜索: {search_query}")
 response = es.search(index=ES_INDEX, query={"match": {"content": search_query}}, size=rep_size)
