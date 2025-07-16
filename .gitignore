@@ -37,7 +37,7 @@ data/processed/
 data/raw_reports/
 
 # 本地知识库文档（如有敏感/大文件可忽略）
-# docs/
+docs/
 
 # 项目自动生成/临时文件
 *.bak
