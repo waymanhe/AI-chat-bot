@@ -7,7 +7,8 @@ import os
 from elasticsearch import Elasticsearch, helpers
 import fitz  # PyMuPDF
 from tqdm import tqdm
-from config import ES_HOST, ES_USERNAME, ES_PASSWORD, ES_INDEX
+from config import ES_HOST, ES_USERNAME, ES_PASSWORD, ES_INDEX, MINERU_API_KEY
+import json
 
 # ========== 自动获取 docs 目录下所有文件 ==========
 DOCS_DIR = './docs'
@@ -57,41 +58,57 @@ if not es.indices.exists(index=ES_INDEX):
 else:
     print(f"索引已存在: {ES_INDEX}")
 
-# ========== 3. 解析文档并分段 ==========
-def extract_txt(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        return f.read()
+# ========== 3. 解析 minerU 结构化 JSON 并分段 ==========
+PROCESSED_DIR = './processed_reports'
 
-def extract_pdf(file_path):
-    doc = fitz.open(file_path)
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    return text
+def parse_mineru_json(json_path):
+    with open(json_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    texts = []
+    if isinstance(data, dict):
+        if 'pages' in data:
+            for page in data['pages']:
+                txt = page.get('text', '')
+                if txt.strip():
+                    texts.append(txt)
+        elif 'paragraphs' in data:
+            for para in data['paragraphs']:
+                txt = para.get('text', '')
+                if txt.strip():
+                    texts.append(txt)
+        elif 'content' in data and isinstance(data['content'], str):
+            if data['content'].strip():
+                texts.append(data['content'])
+        else:
+            print(f"[警告] {json_path} 结构异常，未能提取文本。")
+    elif isinstance(data, list):
+        for page in data:
+            txt = page.get('text', '')
+            if txt.strip():
+                texts.append(txt)
+    else:
+        print(f"[警告] {json_path} 结构异常，未能提取文本。")
+    return texts
 
 def split_text(text, chunk_size=500):
-    # 按 chunk_size 字符分段
     return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
 
 def parse_and_yield_docs():
-    for file_path in DOCS_FILES:
-        ext = os.path.splitext(file_path)[-1].lower()
-        if ext == '.txt':
-            text = extract_txt(file_path)
-        elif ext == '.pdf':
-            text = extract_pdf(file_path)
-        else:
-            continue
-        doc_name = os.path.basename(file_path)
-        chunks = split_text(text)
-        for idx, chunk in enumerate(chunks):
-            yield {
-                '_op_type': 'index',
-                '_index': ES_INDEX,
-                'doc_name': doc_name,
-                'content': chunk,
-                'chunk_id': idx
-            }
+    for fname in os.listdir(PROCESSED_DIR):
+        if fname.endswith('.json'):
+            doc_name = fname.replace('.json', '')
+            texts = parse_mineru_json(os.path.join(PROCESSED_DIR, fname))
+            for idx, chunk in enumerate(texts):
+                for sub_idx, sub_chunk in enumerate(split_text(chunk)):
+                    if not sub_chunk.strip():
+                        continue
+                    yield {
+                        '_op_type': 'index',
+                        '_index': ES_INDEX,
+                        'doc_name': doc_name,
+                        'content': sub_chunk,
+                        'chunk_id': idx * 10000 + sub_idx  # 保证唯一且为整数
+                    }
 
 # ========== 4. 批量写入ES ==========
 print("正在写入文档到ES...")
